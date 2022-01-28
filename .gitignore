@@ -1,0 +1,48 @@
+**/.checkstyle
+**/target/
+**/.DS_Store
+**/.cache-tests
+**/.cache-main
+**/schema.mwb.beforefix
+**/.pydevproject
+**/scalastyle-output.xml
+**/.worksheet
+**/derby.log
+**/metastore_db/**
+**/logs/**
+**/*.deb
+**/dependency-reduced-pom.xml
+**uml
+
+# use glob syntax.
+syntax: glob
+**.ser
+**.class
+**.bak
+**.old
+
+# eclipse conf file
+**.settings
+**.classpath
+**.project
+**.manager
+**.scala_dependencies
+
+# idea
+**.idea
+**.iml
+**.ipr
+**.iws
+
+# other scm
+**.svn
+**.CVS
+**.hg*
+
+# switch to regexp syntax.
+#  syntax: regexp
+#  ^\.pc/
+
+#SHITTY output not in target directory
+**build.log
+**build/
