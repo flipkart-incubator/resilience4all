@@ -41,15 +41,17 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServlet {
 
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(Resilience4jMetricsStreamServlet.class);
-  private static final long serialVersionUID = -7548505095303313237L;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(Resilience4jMetricsStreamServlet.class);
+    private static final long serialVersionUID = -7548505095303313237L;
 
-  /* used to track number of connections and throttle */
-  private static final AtomicInteger concurrentConnections = new AtomicInteger(0);
+    /* used to track number of connections and throttle */
+    private static final AtomicInteger concurrentConnections = new AtomicInteger(0);
   private static final int DEFAULT_PAUSE_POLLER_THREAD_DELAY_IN_MS = 1000;
 
   /* package-private */ Resilience4jMetricsStreamServlet(Observable<String> sampleStream) {
@@ -153,26 +155,23 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
     }
 
     public Resilience4jMetricsStreamServlet build() {
-      final Observable<List<HystrixCommandLikeMetrics>> observable =
-          Observable.interval(1, TimeUnit.SECONDS)
-              .map(
-                  i -> {
-                    final HashMap<String, CircuitBreaker> circuitBreakerMap =
-                        new HashMap<>(circuitBreakers);
-                    for (CircuitBreaker circuitBreaker :
-                        circuitBreakerRegistry.getAllCircuitBreakers()) {
-                      circuitBreakerMap.put(circuitBreaker.getName(), circuitBreaker);
+        final Observable<List<HystrixMetrics>> commandObservable = Observable.interval(1, TimeUnit.SECONDS)
+                .map(i -> {
+                    final HashMap<String, CircuitBreaker> circuitBreakerMap = new HashMap<>(
+                            circuitBreakers);
+                    for (CircuitBreaker circuitBreaker : circuitBreakerRegistry.getAllCircuitBreakers()) {
+                        circuitBreakerMap.put(circuitBreaker.getName(), circuitBreaker);
                     }
 
                     final HashMap<String, Bulkhead> bulkheadMap = new HashMap<>(bulkheads);
                     for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
-                      bulkheadMap.put(bulkhead.getName(), bulkhead);
+                        bulkheadMap.put(bulkhead.getName(), bulkhead);
                     }
 
                     final HashMap<String, ThreadPoolBulkhead> threadPoolBulkheadMap =
-                        new HashMap<>(threadPoolBulkheads);
+                            new HashMap<>(threadPoolBulkheads);
                     for (ThreadPoolBulkhead threadPoolBulkhead :
-                        threadPoolBulkheadRegistry.getAllBulkheads()) {
+                            threadPoolBulkheadRegistry.getAllBulkheads()) {
                       threadPoolBulkheadMap.put(threadPoolBulkhead.getName(), threadPoolBulkhead);
                     }
 
@@ -211,48 +210,43 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                     keySet.addAll(serverTimerMap.keySet());
                     keySet.addAll(timeLimiterMap.keySet());
 
-                    return keySet.stream()
-                        .map(
-                            key ->
-                                new HystrixCommandLikeMetrics(
-                                    key,
+                    Stream<HystrixCommandLikeMetrics> hystrixCommandLikeMetricsStream = keySet.stream()
+                            .map(key -> new HystrixCommandLikeMetrics(key,
                                     circuitBreakerMap.get(key),
                                     bulkheadMap.get(key),
                                     threadPoolBulkheadMap.get(key),
                                     retryMap.get(key),
                                     timeLimiterMap.get(key),
                                     clientTimerMap.get(key),
-                                    serverTimerMap.get(key)))
-                        .collect(Collectors.toList());
-                  });
-      final Observable<HystrixCommandLikeMetrics> observable2 =
-          observable.flatMap(Observable::from);
-      final Observable<String> observable3 =
-          observable2.map(
-              m -> {
-                try {
-                  return objectMapper.writeValueAsString(m);
-                } catch (Exception e) {
-                  LOGGER.warn("Error in resilience.stream", e);
-                  return "";
-                }
-              });
+                                    serverTimerMap.get(key)));
 
-      final Observable<String> hystrixObservable =
-          HystrixDashboardStream.getInstance()
-              .observe()
-              .concatMap(
-                  (Func1<DashboardData, Observable<String>>)
-                      dashboardData ->
-                          Observable.from(
-                              SerialHystrixDashboardData.toMultipleJsonStrings(dashboardData)));
+                    Stream<HystrixThreadPoolLikeMetrics> hystrixThreadPoolLikeMetricsStream = threadPoolBulkheadMap.keySet().stream()
+                            .map(key -> new HystrixThreadPoolLikeMetrics(key,
+                                    threadPoolBulkheadMap.get(key)));
 
-      final Observable<String> observable4 =
-          observable3.mergeWith(hystrixObservable).share().onBackpressureDrop();
-      //      final Observable<String> observable4 =
-      // observable3/*.mergeWith(hystrixObservable)*/.share().onBackpressureDrop();
+                    return Stream.concat(hystrixCommandLikeMetricsStream, hystrixThreadPoolLikeMetricsStream)
+                            .collect(Collectors.toList());
 
-      return new Resilience4jMetricsStreamServlet(observable4);
+                });
+        final Observable<HystrixMetrics> commandObservableMap = commandObservable
+                .flatMap(Observable::from);
+        final Observable<String> serializedCommandObservable = commandObservableMap.map(m -> {
+            try {
+                return objectMapper.writeValueAsString(m);
+            } catch (Exception e) {
+                LOGGER.warn("Error in resilience.stream", e);
+                return "";
+            }
+        });
+
+        final Observable<String> hystrixObservable = HystrixDashboardStream.getInstance().observe()
+                .concatMap((Func1<DashboardData, Observable<String>>) dashboardData -> Observable
+                        .from(SerialHystrixDashboardData.toMultipleJsonStrings(dashboardData)));
+
+        final Observable<String> finalObservable = serializedCommandObservable.mergeWith(hystrixObservable).share().onBackpressureDrop();
+
+        return new Resilience4jMetricsStreamServlet(finalObservable);
     }
+
   }
 }

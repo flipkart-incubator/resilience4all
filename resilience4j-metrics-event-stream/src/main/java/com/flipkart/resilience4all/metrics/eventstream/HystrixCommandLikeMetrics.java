@@ -33,17 +33,24 @@ import rx.exceptions.OnErrorNotImplementedException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class HystrixCommandLikeMetrics {
-  @JsonIgnore private final CircuitBreaker circuitBreaker;
-  @JsonIgnore private final Bulkhead bulkhead;
-  @JsonIgnore private final ThreadPoolBulkhead threadPoolBulkhead;
-  @JsonIgnore private final Retry retry;
-  @JsonIgnore private final TimeLimiter timeLimiter;
-  @JsonIgnore private final Timer clientTimer;
-  @JsonIgnore private final Timer serverTimer;
+public class HystrixCommandLikeMetrics implements HystrixMetrics {
+  @JsonIgnore
+  private final CircuitBreaker circuitBreaker;
+  @JsonIgnore
+  private final Bulkhead bulkhead;
+  @JsonIgnore
+  private final ThreadPoolBulkhead threadPoolBulkhead;
+  @JsonIgnore
+  private final Retry retry;
+  @JsonIgnore
+  private final TimeLimiter timeLimiter;
+  @JsonIgnore
+  private final Timer clientTimer;
+  @JsonIgnore
+  private final Timer serverTimer;
 
   public HystrixCommandLikeMetrics(
-      String commandName,
+          String commandName,
       CircuitBreaker circuitBreaker,
       Bulkhead bulkhead,
       ThreadPoolBulkhead threadPoolBulkhead,
@@ -417,11 +424,6 @@ public class HystrixCommandLikeMetrics {
     return false;
   }
 
-  public int getReportingHosts() {
-    // Hard-coded in both Hystrix and Resilience4j
-    return 1;
-  }
-
   public String getThreadPool() {
     if (Objects.nonNull(threadPoolBulkhead)) {
       return threadPoolBulkhead.getName();
@@ -429,51 +431,4 @@ public class HystrixCommandLikeMetrics {
     return null;
   }
 
-  public Number getCurrentActiveCount() {
-    // Can't implement;
-    return 0;
-  }
-
-  public Number getCurrentCompletedTaskCount() {
-    // Can't implement;
-    return 0;
-  }
-
-  public Number getCurrentCorePoolSize() {
-    if (Objects.isNull(bulkhead) && Objects.nonNull(threadPoolBulkhead)) {
-      return threadPoolBulkhead.getMetrics().getCoreThreadPoolSize();
-    }
-    return 0;
-  }
-
-  public Number getCurrentLargestPoolSize() {
-    // Can't implement;
-    return 0;
-  }
-
-  public Number getCurrentMaximumPoolSize() {
-    if (Objects.isNull(bulkhead) && Objects.nonNull(threadPoolBulkhead)) {
-      return threadPoolBulkhead.getMetrics().getMaximumThreadPoolSize();
-    }
-    return 0;
-  }
-
-  public Number getCurrentPoolSize() {
-    if (Objects.isNull(bulkhead) && Objects.nonNull(threadPoolBulkhead)) {
-      return threadPoolBulkhead.getMetrics().getThreadPoolSize();
-    }
-    return 0;
-  }
-
-  public Number getCurrentTaskCount() {
-    // Can't implement;
-    return 0;
-  }
-
-  public Number getCurrentQueueSize() {
-    if (Objects.isNull(bulkhead) && Objects.nonNull(threadPoolBulkhead)) {
-      return threadPoolBulkhead.getMetrics().getQueueCapacity();
-    }
-    return 0;
-  }
 }
