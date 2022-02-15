@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-package com.flipkart.resilienthttpclient.example;
+package com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module;
 
 import com.codahale.metrics.MetricRegistry;
 import com.flipkart.resilience4all.metrics.eventstream.Resilience4jMetricsStreamServlet;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.ExampleConfiguration;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.service.DummyGetUserService;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.service.DummyListUsersService;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.service.GetUserService;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.service.ListUsersService;
 import com.flipkart.resilience4all.resilience4j.timer.TimerRegistry;
-import com.flipkart.resilienthttpclient.ResilientDomain;
-import com.flipkart.resilienthttpclient.example.core.ExternalService;
-import com.flipkart.resilienthttpclient.example.core.ExternalServiceClient;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import io.dropwizard.setup.Environment;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.asynchttpclient.AsyncHttpClient;
 
 import javax.inject.Named;
-import java.util.concurrent.Executors;
-
-import static org.asynchttpclient.Dsl.asyncHttpClient;
 
 public class ExampleGuiceModule implements Module {
 
@@ -64,7 +60,14 @@ public class ExampleGuiceModule implements Module {
   @Provides
   @Singleton
   public CircuitBreakerRegistry providesCircuitBreakerRegistry() {
-    return CircuitBreakerRegistry.ofDefaults();
+
+    CircuitBreakerConfig circuitBreakerConfig =
+        CircuitBreakerConfig.custom()
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+            .slidingWindowSize(10)
+            .build();
+
+    return CircuitBreakerRegistry.of(circuitBreakerConfig);
   }
 
   @Provides
@@ -99,29 +102,16 @@ public class ExampleGuiceModule implements Module {
 
   @Provides
   @Singleton
-  public ExternalService providesExternalService(
-      MetricRegistry metricRegistry,
-      CircuitBreakerRegistry circuitBreakerRegistry,
-      RetryRegistry retryRegistry,
-      BulkheadRegistry bulkheadRegistry,
-      TimerRegistry timerRegistry) {
-    final AsyncHttpClient normalAsyncHttpClient = asyncHttpClient();
+  @Named("default")
+  public ListUsersService providesListUsersService() {
+    return new DummyListUsersService();
+  }
 
-    final AsyncHttpClient resilientDomain =
-        ResilientDomain.builder("externalService")
-            .asyncHttpClient(normalAsyncHttpClient)
-            .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-            .circuitBreakerRegistry(circuitBreakerRegistry)
-            .retryConfig(RetryConfig.ofDefaults(), Executors.newScheduledThreadPool(1))
-            .retryRegistry(retryRegistry)
-            .bulkheadConfig(BulkheadConfig.ofDefaults())
-            .bulkheadRegistry(bulkheadRegistry)
-            .maxContentLengthInBytes(1024 * 2) // Setting it to 2KB
-            .metricRegistry(metricRegistry)
-            .timerRegistry(timerRegistry)
-            .build();
-
-    return new ExternalServiceClient(resilientDomain);
+  @Provides
+  @Singleton
+  @Named("default")
+  public GetUserService providesGetUserService() {
+    return new DummyGetUserService();
   }
 
   @Provides

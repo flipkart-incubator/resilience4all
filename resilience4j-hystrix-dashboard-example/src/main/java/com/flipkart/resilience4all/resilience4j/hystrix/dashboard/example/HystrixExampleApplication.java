@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.flipkart.resilienthttpclient.example;
+package com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example;
 
 import com.codahale.metrics.MetricRegistry;
-import com.flipkart.resilience4all.metrics.eventstream.Resilience4jMetricsStreamServlet;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.ExampleGuiceModule;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.HystrixGetUserGuiceModule;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.HystrixListUsersGuiceModule;
 import com.netflix.hystrix.contrib.codahalemetricspublisher.HystrixCodaHaleMetricsPublisher;
+import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsStreamServlet;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import io.dropwizard.Application;
 import io.dropwizard.jetty.MutableServletContextHandler;
@@ -28,19 +31,22 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 import ru.vyarus.dropwizard.guice.injector.lookup.InjectorLookup;
 
-public class ExampleApplication extends Application<ExampleConfiguration> {
+public class HystrixExampleApplication extends Application<ExampleConfiguration> {
 
-  public ExampleApplication() {}
+  public HystrixExampleApplication() {}
 
   public static void main(String[] args) throws Exception {
-    new ExampleApplication().run(args);
+    new HystrixExampleApplication().run(args);
   }
 
   @Override
   public void initialize(Bootstrap<ExampleConfiguration> bootstrap) {
     bootstrap.addBundle(
         GuiceBundle.builder()
-            .modules(new ExampleGuiceModule())
+            .modules(
+                new ExampleGuiceModule(),
+                new HystrixListUsersGuiceModule(),
+                new HystrixGetUserGuiceModule())
             .extensions(ExampleResource.class)
             .build());
   }
@@ -49,8 +55,8 @@ public class ExampleApplication extends Application<ExampleConfiguration> {
   public void run(ExampleConfiguration exampleConfiguration, Environment environment)
       throws Exception {
     final MutableServletContextHandler applicationContext = environment.getApplicationContext();
-    final Resilience4jMetricsStreamServlet servlet1 =
-        InjectorLookup.getInjector(this).get().getInstance(Resilience4jMetricsStreamServlet.class);
+    final HystrixMetricsStreamServlet servlet1 =
+        InjectorLookup.getInjector(this).get().getInstance(HystrixMetricsStreamServlet.class);
 
     final ServletHolder servlet = new ServletHolder(servlet1);
     applicationContext.addServlet(servlet, "/hystrix.stream");
@@ -60,15 +66,5 @@ public class ExampleApplication extends Application<ExampleConfiguration> {
     HystrixPlugins.reset();
     final HystrixPlugins instance = HystrixPlugins.getInstance();
     instance.registerMetricsPublisher(new HystrixCodaHaleMetricsPublisher(metrics));
-
-    // Uncomment below for printing metrics on the console
-    //    ConsoleReporter.forRegistry(metrics)
-    //        .filter(
-    //            (s, metric) -> s.toLowerCase().contains("uuid") &&
-    // s.toLowerCase().contains("success"))
-    //        .convertRatesTo(TimeUnit.SECONDS)
-    //        .convertDurationsTo(TimeUnit.MILLISECONDS)
-    //        .build()
-    //        .start(1, TimeUnit.SECONDS);
   }
 }

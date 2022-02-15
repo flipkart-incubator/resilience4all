@@ -34,23 +34,16 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class HystrixCommandLikeMetrics implements HystrixMetrics {
-  @JsonIgnore
-  private final CircuitBreaker circuitBreaker;
-  @JsonIgnore
-  private final Bulkhead bulkhead;
-  @JsonIgnore
-  private final ThreadPoolBulkhead threadPoolBulkhead;
-  @JsonIgnore
-  private final Retry retry;
-  @JsonIgnore
-  private final TimeLimiter timeLimiter;
-  @JsonIgnore
-  private final Timer clientTimer;
-  @JsonIgnore
-  private final Timer serverTimer;
+  @JsonIgnore private final CircuitBreaker circuitBreaker;
+  @JsonIgnore private final Bulkhead bulkhead;
+  @JsonIgnore private final ThreadPoolBulkhead threadPoolBulkhead;
+  @JsonIgnore private final Retry retry;
+  @JsonIgnore private final TimeLimiter timeLimiter;
+  @JsonIgnore private final Timer clientTimer;
+  @JsonIgnore private final Timer serverTimer;
 
   public HystrixCommandLikeMetrics(
-          String commandName,
+      String commandName,
       CircuitBreaker circuitBreaker,
       Bulkhead bulkhead,
       ThreadPoolBulkhead threadPoolBulkhead,
@@ -430,5 +423,4 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
     }
     return null;
   }
-
 }

@@ -1,7 +1,7 @@
 package com.flipkart.resilience4all.metrics.eventstream;
 
 public interface HystrixMetrics {
-    public String getType();
+  String getType();
 
-    public String getName();
+  String getName();
 }
