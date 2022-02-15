@@ -25,7 +25,6 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Response;
 
 public class AnotherExternalServiceClient {
-  private static Integer I;
   private final AsyncHttpClient asyncHttpClient;
   private final ObjectMapper objectMapper =
       new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

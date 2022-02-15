@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package com.flipkart.resilienthttpclient.example;
+package com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example;
 
 import com.codahale.metrics.MetricRegistry;
 import com.flipkart.resilience4all.metrics.eventstream.Resilience4jMetricsStreamServlet;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.ExampleGuiceModule;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.Resilience4jGetUserGuiceModule;
+import com.flipkart.resilience4all.resilience4j.hystrix.dashboard.example.module.Resilience4jListUsersGuiceModule;
 import com.netflix.hystrix.contrib.codahalemetricspublisher.HystrixCodaHaleMetricsPublisher;
 import com.netflix.hystrix.strategy.HystrixPlugins;
 import io.dropwizard.Application;
@@ -28,19 +31,22 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 import ru.vyarus.dropwizard.guice.injector.lookup.InjectorLookup;
 
-public class ExampleApplication extends Application<ExampleConfiguration> {
+public class Resilience4jExampleApplication extends Application<ExampleConfiguration> {
 
-  public ExampleApplication() {}
+  public Resilience4jExampleApplication() {}
 
   public static void main(String[] args) throws Exception {
-    new ExampleApplication().run(args);
+    new Resilience4jExampleApplication().run(args);
   }
 
   @Override
   public void initialize(Bootstrap<ExampleConfiguration> bootstrap) {
     bootstrap.addBundle(
         GuiceBundle.builder()
-            .modules(new ExampleGuiceModule())
+            .modules(
+                new ExampleGuiceModule(),
+                new Resilience4jListUsersGuiceModule(),
+                new Resilience4jGetUserGuiceModule())
             .extensions(ExampleResource.class)
             .build());
   }
@@ -60,15 +66,5 @@ public class ExampleApplication extends Application<ExampleConfiguration> {
     HystrixPlugins.reset();
     final HystrixPlugins instance = HystrixPlugins.getInstance();
     instance.registerMetricsPublisher(new HystrixCodaHaleMetricsPublisher(metrics));
-
-    // Uncomment below for printing metrics on the console
-    //    ConsoleReporter.forRegistry(metrics)
-    //        .filter(
-    //            (s, metric) -> s.toLowerCase().contains("uuid") &&
-    // s.toLowerCase().contains("success"))
-    //        .convertRatesTo(TimeUnit.SECONDS)
-    //        .convertDurationsTo(TimeUnit.MILLISECONDS)
-    //        .build()
-    //        .start(1, TimeUnit.SECONDS);
   }
 }
