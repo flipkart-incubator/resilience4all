@@ -6,6 +6,34 @@ over http.
 
 # Modules
 
+## resilience4j-metrics-event-stream
+
+This module enables Hystrix Dashboard for resilience4j metrics.
+
+Step 1: Add the following dependency
+
+```
+        <dependency>
+            <groupId>com.flipkart.resilience4all</groupId>
+            <artifactId>resilience4j-metrics-event-stream</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+```
+
+Step 2: Initialize and register `Resilience4jMetricsStreamServlet` servlet. Example code for a Dropwizard Application
+
+```
+    final MutableServletContextHandler applicationContext = environment.getApplicationContext();
+    final Resilience4jMetricsStreamServlet servlet1 =
+        InjectorLookup.getInjector(this).get().getInstance(Resilience4jMetricsStreamServlet.class);
+
+    final ServletHolder servlet = new ServletHolder(servlet1);
+    applicationContext.addServlet(servlet, "/hystrix.stream");
+```
+
+Refer `Resilience4jExampleApplication` class in `resilience4j-hystrix-dashboard-example` module for a working dropwizard
+application showcasing the use of Hystrix Dashboard with resilience4j metrics.
+
 ## resilient-http-client
 
 A drop-in replacement for [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)
