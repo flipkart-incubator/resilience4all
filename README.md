@@ -12,17 +12,30 @@ This module enables Hystrix Dashboard for resilience4j metrics.
 
 Step 1: Add the following dependency
 
+
+
+
+```xml
+<dependency>
+    <groupId>com.flipkart.resilience4all</groupId>
+    <artifactId>resilience4j-metrics-event-stream</artifactId>
+    <version>0.0.1</version>
+</dependency>
 ```
-        <dependency>
-            <groupId>com.flipkart.resilience4all</groupId>
-            <artifactId>resilience4j-metrics-event-stream</artifactId>
-            <version>0.0.1</version>
-        </dependency>
+
+And add the clojars in the repositories section
+
+```xml
+<repository>
+    <id>clojars</id>
+    <name>Clojars repository</name>
+    <url>https://clojars.org/repo</url>
+</repository>
 ```
 
 Step 2: Initialize and register `Resilience4jMetricsStreamServlet` servlet. Example code for a Dropwizard Application
 
-```
+```java
     final MutableServletContextHandler applicationContext = environment.getApplicationContext();
     final Resilience4jMetricsStreamServlet servlet1 =
         InjectorLookup.getInjector(this).get().getInstance(Resilience4jMetricsStreamServlet.class);
@@ -81,7 +94,7 @@ The code for the examples below can be found in module `resilient-http-client-ex
 
 A. Code to AsyncHttpClient interface
 
-```$xslt
+```java
 public class ExternalServiceClient {
   private AsyncHttpClient asyncHttpClient;
 
@@ -111,7 +124,7 @@ Please not the exception handling and providing fallback in the `.exceptionally(
 
 B. Build `ResilientDomain` and configure for ExternalService as per business domain needs.
 
-```$xslt
+```java
 final ResilientDomain resilientDomain = ResilientDomain.builder("externalService")
     .asyncHttpClient(defaultAsyncHttpClient)
     .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
@@ -136,7 +149,7 @@ Note: Same asyncHttpClient can be used for more than one `ResilientDomain` insta
 
 C. Inject `ResilientDomain` in `ExternalServiceClient`
 
-```
+```java
 final ExternalServiceClient externalServiceClient = new ExternalServiceClient(
 resilientDomain);
 ```
@@ -149,7 +162,7 @@ instances of `ResilientDomain`s in relevant classes.
 
 D. Interact with ExternalService like before.
 
-```$xslt
+```java
 final User user2 = externalServiceClient.getUser(2);
 ```
 
@@ -207,7 +220,7 @@ Dashboard; best of both worlds. Needless to say, it is compatible with Netflix T
 
 A. Add dependency of resilience4j-metrics-event-stream
 
-```
+```xml
 <dependency>
     <groupId>com.flipkart.resilience4all</groupId>
     <artifactId>resilience4j-metrics-event-stream</artifactId>
@@ -217,7 +230,7 @@ A. Add dependency of resilience4j-metrics-event-stream
 
 B. Add dependency of hystrix-metrics-event-stream
 
-```
+```xml
 <dependency>
     <groupId>com.netflix.hystrix</groupId>
     <artifactId>hystrix-metrics-event-stream</artifactId>
@@ -231,7 +244,7 @@ queries `CircuitBreakerRegistry`, `BulkheadRegistry`, `ThreadPoolBulkheadRegistr
 Let's first create a resilientDomain that uses these objects. Check the code in
 `resilient-http-client-example` class `com.flipkart.resilienthttpclient.example.ExampleGuiceModule`.
 
-```
+```java
   @Provides
   @Singleton
   public ExternalService providesExternalService(MetricRegistry metricRegistry,
@@ -261,7 +274,7 @@ Let's first create a resilientDomain that uses these objects. Check the code in
 
 D. Use the same singleton instances to create `Resilience4jMetricsStreamServlet` (in ExampleGuiceModule)
 
-```
+```java
   @Provides
   @Singleton
   public Resilience4jMetricsStreamServlet providesResilience4jMetricsStreamServlet(CircuitBreakerRegistry circuitBreakerRegistry,
@@ -282,7 +295,7 @@ D. Use the same singleton instances to create `Resilience4jMetricsStreamServlet`
 
 E. Register the servlet in application context. Check `ExampleApplication`.`run()`
 
-```
+```java
     final MutableServletContextHandler applicationContext = environment
         .getApplicationContext();
     final Resilience4jMetricsStreamServlet servlet1 = InjectorLookup.getInjector(this).get()
