@@ -28,6 +28,16 @@
     <artifactId>resilience4j-metrics-event-stream</artifactId>
 
     <packaging>jar</packaging>
+
+
+    <licenses>
+        <license>
+        <name>The Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <build>
         <plugins>
             <plugin>

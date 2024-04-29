@@ -33,7 +33,21 @@
         <module>resilience4j-hystrix-dashboard-example</module>
     </modules>
 
+    <distributionManagement>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars</name>
+            <url>https://clojars.org/repo</url>
+        </repository>
+    </distributionManagement>
 
+    <licenses>
+        <license>
+        <name>The Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        <distribution>repo</distribution>
+        </license>
+    </licenses>
 
 
     <properties>
