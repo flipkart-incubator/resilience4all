@@ -3,6 +3,7 @@ package com.flipkart.resilience4all.metrics.eventstream;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.metrics.Timer;
 import rx.exceptions.OnErrorNotImplementedException;
 
 import java.util.Objects;
@@ -11,9 +12,10 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
 
   @JsonIgnore private final ThreadPoolBulkhead threadPoolBulkhead;
   @JsonIgnore private final CircuitBreaker circuitBreaker;
+  @JsonIgnore private final Timer serverTimer;
 
   public HystrixThreadPoolLikeMetrics(
-      String commandName, ThreadPoolBulkhead threadPoolBulkhead, CircuitBreaker circuitBreaker) {
+          String commandName, ThreadPoolBulkhead threadPoolBulkhead, CircuitBreaker circuitBreaker, Timer serverTimer) {
     if (Objects.isNull(threadPoolBulkhead)) {
       throw new OnErrorNotImplementedException(
           "Please provide threadpoolbulkhead for: " + commandName,
@@ -22,6 +24,7 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
 
     this.threadPoolBulkhead = threadPoolBulkhead;
     this.circuitBreaker = circuitBreaker;
+    this.serverTimer = serverTimer;
   }
 
   public String getType() {
@@ -77,6 +80,9 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   public Number getRollingCountThreadsExecuted() {
     if (Objects.nonNull(circuitBreaker)) {
       return circuitBreaker.getMetrics().getNumberOfBufferedCalls();
+    }
+    if (Objects.nonNull(serverTimer)) {
+      return serverTimer.getMetrics().getSnapshot().size();
     }
     return 0;
   }

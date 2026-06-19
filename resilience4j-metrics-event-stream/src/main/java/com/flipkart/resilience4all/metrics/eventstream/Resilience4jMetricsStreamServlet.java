@@ -83,6 +83,7 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
 
   public static class Builder {
     private final ObjectMapper objectMapper = new ObjectMapper();
+    Map<String, String> commandToThreadPoolMap = new HashMap<>();
     Map<String, CircuitBreaker> circuitBreakers = new HashMap<>();
     Map<String, Bulkhead> bulkheads = new HashMap<>();
     Map<String, ThreadPoolBulkhead> threadPoolBulkheads = new HashMap<>();
@@ -96,6 +97,11 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
     RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
     TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
     TimerRegistry timerRegistry = TimerRegistry.ofDefaults();
+
+    public Builder withCommandToThreadPoolMapping(Map<String, String> mapping) {
+      this.commandToThreadPoolMap.putAll(mapping);
+      return this;
+    }
 
     public Builder andCircuitBreaker(CircuitBreaker circuitBreaker) {
       circuitBreakers.put(circuitBreaker.getName(), circuitBreaker);
@@ -220,7 +226,7 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                                         key,
                                         circuitBreakerMap.get(key),
                                         bulkheadMap.get(key),
-                                        threadPoolBulkheadMap.get(key),
+                                        threadPoolBulkheadMap.get(commandToThreadPoolMap.getOrDefault(key, key)),
                                         retryMap.get(key),
                                         timeLimiterMap.get(key),
                                         clientTimerMap.get(key),
@@ -233,8 +239,8 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                                     new HystrixThreadPoolLikeMetrics(
                                         key,
                                         threadPoolBulkheadMap.get(key),
-                                        circuitBreakerMap.get(key)));
-
+                                        circuitBreakerMap.get(key),
+                                        serverTimerMap.get(key)));
                     return Stream.concat(
                             hystrixCommandLikeMetricsStream, hystrixThreadPoolLikeMetricsStream)
                         .collect(Collectors.toList());
