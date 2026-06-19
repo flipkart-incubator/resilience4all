@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.ArrayList;
 
 public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServlet {
 
@@ -212,7 +213,9 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                     final Set<String> keySet = new HashSet<>();
                     keySet.addAll(circuitBreakerMap.keySet());
                     keySet.addAll(bulkheadMap.keySet());
-                    keySet.addAll(threadPoolBulkheadMap.keySet());
+                    // threadPoolBulkheadMap keys are intentionally NOT added here —
+                    // thread pools are only surfaced via HystrixThreadPoolLikeMetrics below.
+                    // Adding them here would create a phantom "CommonPool" circuit on the dashboard.
                     keySet.addAll(retryMap.keySet());
                     keySet.addAll(clientTimerMap.keySet());
                     keySet.addAll(serverTimerMap.keySet());
@@ -232,6 +235,18 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                                         clientTimerMap.get(key),
                                         serverTimerMap.get(key)));
 
+                    // Build reverse map: threadPoolName → list of CBs sharing that pool.
+                    // e.g. "CommonPool" → [ServiceA CB, ServiceB CB]
+                    final Map<String, List<CircuitBreaker>> poolToCBs = new HashMap<>();
+                    for (Map.Entry<String, String> entry : commandToThreadPoolMap.entrySet()) {
+                      CircuitBreaker cb = circuitBreakerMap.get(entry.getKey());
+                      if (cb != null) {
+                        poolToCBs
+                            .computeIfAbsent(entry.getValue(), k -> new ArrayList<>())
+                            .add(cb);
+                      }
+                    }
+
                     Stream<HystrixThreadPoolLikeMetrics> hystrixThreadPoolLikeMetricsStream =
                         threadPoolBulkheadMap.keySet().stream()
                             .map(
@@ -239,7 +254,7 @@ public class Resilience4jMetricsStreamServlet extends Resilience4jSampleSseServl
                                     new HystrixThreadPoolLikeMetrics(
                                         key,
                                         threadPoolBulkheadMap.get(key),
-                                        circuitBreakerMap.get(key),
+                                        poolToCBs.getOrDefault(key, Collections.emptyList()),
                                         serverTimerMap.get(key)));
                     return Stream.concat(
                             hystrixCommandLikeMetricsStream, hystrixThreadPoolLikeMetricsStream)
