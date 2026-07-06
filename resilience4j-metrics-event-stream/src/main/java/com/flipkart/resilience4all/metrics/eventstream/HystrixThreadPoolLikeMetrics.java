@@ -3,25 +3,36 @@ package com.flipkart.resilience4all.metrics.eventstream;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.metrics.Timer;
 import rx.exceptions.OnErrorNotImplementedException;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
 
   @JsonIgnore private final ThreadPoolBulkhead threadPoolBulkhead;
-  @JsonIgnore private final CircuitBreaker circuitBreaker;
+  /**
+   * All circuit breakers sharing this thread pool (commonThreadpool pattern).
+   * We aggregate their buffered-call counts to compute total executions through the pool.
+   */
+  @JsonIgnore private final List<CircuitBreaker> circuitBreakers;
+  @JsonIgnore private final Timer serverTimer;
 
   public HystrixThreadPoolLikeMetrics(
-      String commandName, ThreadPoolBulkhead threadPoolBulkhead, CircuitBreaker circuitBreaker) {
+          String commandName,
+          ThreadPoolBulkhead threadPoolBulkhead,
+          List<CircuitBreaker> circuitBreakers,
+          Timer serverTimer) {
     if (Objects.isNull(threadPoolBulkhead)) {
       throw new OnErrorNotImplementedException(
           "Please provide threadpoolbulkhead for: " + commandName,
           new IllegalArgumentException(commandName));
     }
-
     this.threadPoolBulkhead = threadPoolBulkhead;
-    this.circuitBreaker = circuitBreaker;
+    this.circuitBreakers = circuitBreakers != null ? circuitBreakers : Collections.emptyList();
+    this.serverTimer = serverTimer;
   }
 
   public String getType() {
@@ -29,11 +40,9 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public String getName() {
-
     if (Objects.nonNull(threadPoolBulkhead)) {
       return threadPoolBulkhead.getName();
     }
-
     throw new IllegalStateException("resilience4j object can not be null.");
   }
 
@@ -42,7 +51,6 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getCurrentCompletedTaskCount() {
-    // Can't implement;
     return 0;
   }
 
@@ -51,7 +59,6 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getCurrentLargestPoolSize() {
-    // Can't implement;
     return 0;
   }
 
@@ -64,7 +71,6 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getCurrentTaskCount() {
-    // Can't implement;
     return 0;
   }
 
@@ -74,9 +80,18 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
     return max - available;
   }
 
+  /**
+   * Aggregate buffered calls across all circuit breakers sharing this pool.
+   * This is the total number of executions that went through CommonPool.
+   */
   public Number getRollingCountThreadsExecuted() {
-    if (Objects.nonNull(circuitBreaker)) {
-      return circuitBreaker.getMetrics().getNumberOfBufferedCalls();
+    if (!circuitBreakers.isEmpty()) {
+      return circuitBreakers.stream()
+          .mapToLong(cb -> cb.getMetrics().getNumberOfBufferedCalls())
+          .sum();
+    }
+    if (Objects.nonNull(serverTimer)) {
+      return serverTimer.getMetrics().getSnapshot().size();
     }
     return 0;
   }
@@ -86,7 +101,6 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getRollingCountCommandRejections() {
-    // can't implement
     return 0;
   }
 
@@ -95,8 +109,9 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getPropertyValue_metricsRollingStatisticalWindowInMilliseconds() {
-    // can't implement
-    return 0;
+    // Must be non-zero — Hystrix Dashboard divides rollingCountThreadsExecuted by this
+    // (converted to seconds) to show req/s. Standard Hystrix default is 10 seconds.
+    return 10000;
   }
 
   public Number getReportingHosts() {

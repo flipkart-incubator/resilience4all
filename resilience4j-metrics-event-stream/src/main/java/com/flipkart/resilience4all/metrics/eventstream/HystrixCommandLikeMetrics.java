@@ -366,14 +366,14 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
 
   public int getPropertyValue_executionIsolationThreadTimeoutInMilliseconds() {
     if (Objects.nonNull(timeLimiter)) {
-      return (int) (timeLimiter.getTimeLimiterConfig().getTimeoutDuration().getSeconds() * 1000);
+      return (int) (timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis());
     }
     return 0;
   }
 
   public int getPropertyValue_executionTimeoutInMilliseconds() {
     if (Objects.nonNull(timeLimiter)) {
-      return (int) (timeLimiter.getTimeLimiterConfig().getTimeoutDuration().getSeconds() * 1000);
+      return (int) (timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis());
     }
     return 0;
   }
