@@ -21,11 +21,14 @@
     <parent>
         <artifactId>resilience4all</artifactId>
         <groupId>com.flipkart.resilience4all</groupId>
-        <version>0.0.1</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>resilience4j-metrics-event-stream</artifactId>
+    <version>${revision}</version>
+    <name>Resilience4j Metrics Event Stream</name>
+    <description>A Hystrix-style metrics event stream backed by resilience4j metrics.</description>
 
     <packaging>jar</packaging>
 

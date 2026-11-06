@@ -23,7 +23,8 @@
     <groupId>com.flipkart.resilience4all</groupId>
     <artifactId>resilience4all</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1</version>
+    <!-- CI-friendly version: bump <revision> below to release; children inherit it. -->
+    <version>${revision}</version>
     <modules>
         <module>resilient-http-client</module>
         <module>resilient-http-client-example</module>
@@ -33,13 +34,23 @@
         <module>resilience4j-hystrix-dashboard-example</module>
     </modules>
 
-    <distributionManagement>
-        <repository>
-            <id>clojars</id>
-            <name>Clojars</name>
-            <url>https://clojars.org/repo</url>
-        </repository>
-    </distributionManagement>
+    <name>Resilience4all</name>
+    <description>A toolkit for building resilient services: resilient HTTP client, Hystrix/resilience4j metrics streams, embedded Turbine and timers.</description>
+    <url>https://github.com/flipkart-incubator/resilience4all</url>
+
+    <scm>
+        <connection>scm:git:git://github.com/flipkart-incubator/resilience4all.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/flipkart-incubator/resilience4all.git</developerConnection>
+        <url>https://github.com/flipkart-incubator/resilience4all</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <organization>Flipkart</organization>
+            <organizationUrl>https://github.com/flipkart-incubator</organizationUrl>
+        </developer>
+    </developers>
 
     <licenses>
         <license>
@@ -51,6 +62,7 @@
 
 
     <properties>
+        <revision>0.1.0</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -224,5 +236,99 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <!-- Maven Central publishing requirements: sources jar, javadoc jar and GPG signatures.
+             Upload goes through the Central Portal; credentials come from the "central" server
+             entry that GitHub Actions' setup-java generates from the FOSS secrets. -->
+        <plugins>
+            <!-- Resolves ${revision} into a literal version in the poms that get deployed. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.2</version>
+                <configuration>
+                    <doclint>none</doclint>
+                    <source>8</source>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>
