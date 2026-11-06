@@ -34,11 +34,19 @@
     <parent>
         <groupId>com.flipkart.resilience4all</groupId>
         <artifactId>resilience4all</artifactId>
-        <version>0.0.1</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>resilien4j-hystrix-dashboard-example</artifactId>
+    <version>${revision}</version>
+    <name>Resilience4j Hystrix Dashboard Example</name>
+    <description>Hystrix dashboard example application for resilience4all components.</description>
     <packaging>pom</packaging>
+
+    <properties>
+        <!-- Runnable example, not a released library: keep it out of the Maven Central bundle. -->
+        <skipPublishing>true</skipPublishing>
+    </properties>
 
 
 

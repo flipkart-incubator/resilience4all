@@ -22,11 +22,13 @@
     <parent>
         <groupId>com.flipkart.resilience4all</groupId>
         <artifactId>resilience4all</artifactId>
-        <version>0.0.1</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>resilient-http-client</artifactId>
-    <version>0.0.1</version>
+    <version>${revision}</version>
+    <name>Resilient HTTP Client</name>
+    <description>An asynchronous HTTP client with Hystrix and resilience4j circuit breakers for building resilient services.</description>
 
     <packaging>jar</packaging>
 

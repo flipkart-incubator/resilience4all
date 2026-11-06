@@ -21,11 +21,14 @@
     <parent>
         <artifactId>resilience4all</artifactId>
         <groupId>com.flipkart.resilience4all</groupId>
-        <version>0.0.1</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>embedded-turbine</artifactId>
+    <version>${revision}</version>
+    <name>Embedded Turbine</name>
+    <description>An embeddable Turbine for aggregating Hystrix metrics streams inside your service.</description>
 
     <licenses>
         <license>

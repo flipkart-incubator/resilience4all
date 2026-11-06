@@ -46,3 +46,6 @@ syntax: glob
 #SHITTY output not in target directory
 **build.log
 **build/
+
+# flatten-maven-plugin: resolves ${revision} for the pom that gets deployed
+**/.flattened-pom.xml

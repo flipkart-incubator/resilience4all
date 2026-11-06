@@ -34,11 +34,19 @@
     <parent>
         <groupId>com.flipkart.resilience4all</groupId>
         <artifactId>resilience4all</artifactId>
-        <version>0.0.1</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>resilient-http-client-example</artifactId>
+    <version>${revision}</version>
+    <name>Resilient HTTP Client Example</name>
+    <description>Example application demonstrating the use of resilient-http-client.</description>
     <packaging>pom</packaging>
+
+    <properties>
+        <!-- Runnable example, not a released library: keep it out of the Maven Central bundle. -->
+        <skipPublishing>true</skipPublishing>
+    </properties>
 
     <licenses>
         <license>
