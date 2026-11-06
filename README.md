@@ -6,6 +6,9 @@ over http.
 
 # Modules
 
+All modules are published to [Maven Central](https://central.sonatype.com/search?q=com.flipkart.resilience4all) under
+the group `com.flipkart.resilience4all` - no extra repositories needed; add the dependencies directly.
+
 ## resilience4j-metrics-event-stream
 
 This module enables Hystrix Dashboard for resilience4j metrics.
@@ -13,24 +16,12 @@ This module enables Hystrix Dashboard for resilience4j metrics.
 Step 1: Add the following dependency
 
 
-
-
 ```xml
 <dependency>
     <groupId>com.flipkart.resilience4all</groupId>
     <artifactId>resilience4j-metrics-event-stream</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
 </dependency>
-```
-
-And add the clojars in the repositories section
-
-```xml
-<repository>
-    <id>clojars</id>
-    <name>Clojars repository</name>
-    <url>https://clojars.org/repo</url>
-</repository>
 ```
 
 Step 2: Initialize and register `Resilience4jMetricsStreamServlet` servlet. Example code for a Dropwizard Application
