@@ -38,7 +38,7 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getCurrentActiveCount() {
-    return 0;
+    return threadPoolBulkhead.getMetrics().getActiveThreadCount();
   }
 
   public Number getCurrentCompletedTaskCount() {
@@ -64,8 +64,7 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getCurrentTaskCount() {
-    // Can't implement;
-    return 0;
+    return threadPoolBulkhead.getMetrics().getActiveThreadCount();
   }
 
   public Number getCurrentQueueSize() {
@@ -95,7 +94,9 @@ public class HystrixThreadPoolLikeMetrics implements HystrixMetrics {
   }
 
   public Number getPropertyValue_metricsRollingStatisticalWindowInMilliseconds() {
-    // can't implement
+    if (Objects.nonNull(circuitBreaker)) {
+      return circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize() * 1000;
+    }
     return 0;
   }
 
