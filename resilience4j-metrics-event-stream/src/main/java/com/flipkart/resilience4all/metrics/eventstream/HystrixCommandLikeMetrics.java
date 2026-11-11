@@ -111,6 +111,13 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
       final float failureRate = circuitBreaker.getMetrics().getFailureRate();
       if (failureRate > 0.0) { // It returns -1 if `minimumNumberOfCalls` is not met.
         return failureRate;
+      } else {
+        int failedCalls = circuitBreaker.getMetrics().getNumberOfFailedCalls();
+        int calls = circuitBreaker.getMetrics().getNumberOfBufferedCalls();
+        if (calls > 0) {
+          return (failedCalls * 100f)/(calls * 1f);
+        }
+
       }
     }
 
@@ -153,8 +160,7 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
   }
 
   public long getRollingCountFailure() {
-    // Same as error count
-    return getErrorCount();
+    return getErrorCount() - getRollingCountTimeout();
   }
 
   public long getRollingCountFallbackEmit() {
@@ -207,14 +213,15 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
   }
 
   public long getRollingCountThreadPoolRejected() {
-    if (Objects.nonNull(circuitBreaker)) {
-      return circuitBreaker.getMetrics().getNumberOfFailedCalls();
-    }
+    // Can't be implemented
     return 0;
   }
 
   public long getRollingCountTimeout() {
-    // Can't implement
+    // The implementation goes here with the assumption that the slowCallThreshold is aligned with the timelimiter's timeout config.
+    if (Objects.nonNull(circuitBreaker)) {
+      return circuitBreaker.getMetrics().getNumberOfSlowCalls();
+    }
     return 0;
   }
 
