@@ -213,7 +213,9 @@ public class HystrixCommandLikeMetrics implements HystrixMetrics {
   }
 
   public long getRollingCountThreadPoolRejected() {
-    // Can't be implemented
+    if (Objects.nonNull(circuitBreaker)) {
+      return circuitBreaker.getMetrics().getNumberOfFailedCalls();
+    }
     return 0;
   }
 
